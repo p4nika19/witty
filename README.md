@@ -5,6 +5,6 @@ there will be witty tty.
 * cmake
 * ninja
 
-building instruction:
+## building instruction:
 1. clone git repository
 2. `cmake -G Ninja -B build && cd build && ninja`
