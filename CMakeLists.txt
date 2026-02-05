@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(witty
-    VERSION 0.01
+    VERSION 0.0
     DESCRIPTION "terminal and etc."
     LANGUAGES CXX
 )

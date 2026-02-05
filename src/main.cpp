@@ -53,7 +53,7 @@ int main()
             write(STDOUT_FILENO, buffer, bytes_read);
         }
 
-        if(FD_ISSET(master_fd, &read_fds))  {   //catching pty input
+        if(FD_ISSET(STDIN_FILENO, &read_fds))  {   //catching pty input
             ssize_t bytes_read = read(STDIN_FILENO, buffer, sizeof(buffer));
             if (bytes_read <= 0) break;
             write(master_fd, buffer, bytes_read);
