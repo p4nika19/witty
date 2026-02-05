@@ -11,12 +11,39 @@
 #include <termios.h>
 #include <cstdlib>
 
+class RawModeHandler {
+    struct termios original_termios;
+    bool active = false;
+
+    public:
+    void enable(){
+        tcgetattr(STDIN_FILENO, &original_termios);
+        struct termios raw = original_termios;
+        cfmakeraw(&original_termios);
+        tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+        active = true;
+    }
+
+    void disable(){
+        if(active){
+            tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_termios);
+        }
+    }
+    ~RawModeHandler(){disable();}
+};
+
 int main()
 {
+    RawModeHandler raw;
+    raw.enable();
+
     int master_fd;
     char buffer[4096];  //creating buffer
 
-    pid_t procid = forkpty(&master_fd, nullptr, nullptr, nullptr);  //initializing pty
+    struct termios pty_termios;
+    tcgetattr(STDIN_FILENO, &pty_termios);
+    cfmakeraw(&pty_termios);
+    pid_t procid = forkpty(&master_fd, nullptr, &pty_termios, nullptr);  //initializing pty
 
     if (procid < 0) {
         perror("forkpty failed");   //process error
@@ -55,7 +82,13 @@ int main()
 
         if(FD_ISSET(STDIN_FILENO, &read_fds))  {   //catching pty input
             ssize_t bytes_read = read(STDIN_FILENO, buffer, sizeof(buffer));
-            if (bytes_read <= 0) break;
+            if (bytes_read <= 0) break; //errors proccessing
+
+            for (ssize_t i = 0; i < bytes_read; i++) {  //manual \n processing
+                if(buffer[i]=='\r'){
+                    buffer[i]='\n';
+                }
+            }
             write(master_fd, buffer, bytes_read);
         }
     }
