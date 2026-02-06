@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <vector>
+// libs and etc.
 
 void runshell(){
     const char* shell = std::getenv("SHELL");  //get user shell name
@@ -26,12 +27,12 @@ void runshell(){
     _exit(1);
 }
 
-class RawModeHandler {
+class RawModeHandler {  //raw terminal mode class
     struct termios original_termios;
     bool active = false;
 
     public:
-    void enable(){
+    void enable(){  //enabling func
         if (tcgetattr(STDIN_FILENO, &original_termios)==-1){
             throw std::runtime_error("tcgetattr error");
             return;
@@ -44,21 +45,21 @@ class RawModeHandler {
         active = true;
     }
 
-    void disable(){
+    void disable(){ //disabling function
         if(active){
             tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_termios);
         }
     }
-    ~RawModeHandler(){disable();}
+    ~RawModeHandler(){disable();}   //destructor
 };
 
-class Pty {
+class Pty { //pty initialization
     int master_fd = -1;
     pid_t procid = -1;
     public:
     Pty(){
         struct termios pty_termios;
-        tcgetattr(STDIN_FILENO, &pty_termios);
+        tcgetattr(STDIN_FILENO, &pty_termios);  //make it raw
         cfmakeraw(&pty_termios);
         procid = forkpty(&master_fd, nullptr, &pty_termios, nullptr);  //initializing pty
         if (procid < 0) {
@@ -66,7 +67,7 @@ class Pty {
             exit(1);
         }
         if (procid == 0) {
-            runshell();
+            runshell(); //let it fvcking go
         }
         int flags = fcntl(master_fd, F_GETFL, 0);
         fcntl(master_fd, F_SETFL, flags | O_NONBLOCK);
@@ -80,7 +81,7 @@ class Pty {
         return write(master_fd, buffer, size);
     }
 
-    ~Pty(){
+    ~Pty(){ //destructor
         if (master_fd != -1) { close(master_fd); }
         if (procid > 0) {
             kill(procid, SIGHUP);
@@ -89,14 +90,14 @@ class Pty {
     }
 };
 
-class witty{
+class witty{    //running application class
     RawModeHandler raw;
     Pty pty;
     bool running = true;
     std::vector<char> buffer;
 
     private:
-    void pty_output(){
+    void pty_output(){  //proccessing output
         ssize_t count = pty.readfd(buffer.data(), buffer.size());
         if (count <= 0) {
             running = false;
@@ -104,7 +105,7 @@ class witty{
         }
         write(STDOUT_FILENO, buffer.data(), count);
     }
-    void user_input(){
+    void user_input(){  //processing input
         ssize_t count = read(STDIN_FILENO, buffer.data(), buffer.size());
         if (count <= 0) {
             running = false;
