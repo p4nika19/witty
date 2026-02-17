@@ -1,4 +1,18 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.20)
+
+set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(-O3 -march=native -ffast-math)
+
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT supported OUTPUT error)
+    if(supported)
+        set_property(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    endif()
+
+    add_link_options(-fuse-ld=mold)
+endif()
 
 set(CPM_DOWNLOAD_VERSION 0.38.3)
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
@@ -27,7 +41,7 @@ project(witty
     LANGUAGES CXX
 )
 
-set(CMAKE_CXX_STANDART 23)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
