@@ -6,5 +6,6 @@ there will be witty tty.
 * ninja
 
 ## building instruction:
-1. clone git repository
-2. `cmake -G Ninja -B build && cd build && ninja`
+1. `git clone https://github.com/p4nika19/witty`
+2. `cd witty`
+3. `cmake -G Ninja -B build && cd build && ninja`
